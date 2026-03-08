@@ -21,6 +21,7 @@ import io.scalecube.cluster.Cluster;
 import io.scalecube.cluster.Member;
 import io.scalecube.cluster.membership.MembershipEvent;
 import io.scalecube.cluster.metadata.MetadataCodec;
+import io.scalecube.cluster.transport.api.Transport;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -320,7 +321,7 @@ final class ScaleCubeTopologyService extends AbstractTopologyService {
      * @return Cluster node.
      */
     private static InternalClusterNode fromMember(Member member, @Nullable NodeMetadata nodeMetadata) {
-        var addr = new NetworkAddress(member.address().host(), member.address().port());
+        var addr = new NetworkAddress(Transport.parseHost(member.address()), Transport.parsePort(member.address()));
 
         return new ClusterNodeImpl(UUID.fromString(member.id()), member.alias(), addr, nodeMetadata);
     }

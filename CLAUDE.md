@@ -132,6 +132,21 @@ git push origin <branch-name>
 - **Prefer objects over static methods** - Use constructor injection everywhere possible
 - **Always include Jira ticket link in PRs** - Link to https://issues.apache.org/jira/browse/IGNITE-XXXXX
 
+## Workflow Guidelines
+
+### Build Output Handling
+When running builds, compilations, or tests, **never** forward output to stdout or filter it with `grep`/`tail`. Instead, redirect all output to a temporary log file and read that file afterward:
+```bash
+./gradlew :ignite-network:test > /tmp/build-test.log 2>&1
+```
+Then use the Read tool to inspect the log file for results.
+
+### Inspecting Dependency Source Code
+When you need to understand a dependency's API or source code (e.g., ScaleCube, Calcite), use one of these approaches — **never** disassemble `.class` files with `javap`:
+1. **Download source/javadoc JARs** for the artifact and read them directly
+2. **Find the GitHub repository** for the project and inspect or clone it
+3. **Find documentation** for the project on the web
+
 ## Jira Workflow
 
 - All tickets **must** have the `ignite-3` label

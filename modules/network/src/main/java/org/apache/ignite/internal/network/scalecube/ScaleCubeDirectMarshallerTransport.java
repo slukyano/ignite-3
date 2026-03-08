@@ -19,7 +19,6 @@ package org.apache.ignite.internal.network.scalecube;
 
 import io.scalecube.cluster.transport.api.Message;
 import io.scalecube.cluster.transport.api.Transport;
-import io.scalecube.net.Address;
 import java.util.Map;
 import java.util.Objects;
 import org.apache.ignite.internal.lang.IgniteInternalException;
@@ -72,7 +71,7 @@ class ScaleCubeDirectMarshallerTransport implements Transport {
     private final NetworkMessagesFactory messageFactory;
 
     /** Node address. */
-    private final Address address;
+    private final String address;
 
     /**
      * Constructor.
@@ -82,7 +81,7 @@ class ScaleCubeDirectMarshallerTransport implements Transport {
      * @param messageFactory  Message factory.
      */
     ScaleCubeDirectMarshallerTransport(
-            Address localAddress,
+            String localAddress,
             MessagingService messagingService,
             NetworkMessagesFactory messageFactory
     ) {
@@ -118,7 +117,7 @@ class ScaleCubeDirectMarshallerTransport implements Transport {
 
     /** {@inheritDoc} */
     @Override
-    public Address address() {
+    public String address() {
         return address;
     }
 
@@ -145,8 +144,8 @@ class ScaleCubeDirectMarshallerTransport implements Transport {
 
     /** {@inheritDoc} */
     @Override
-    public Mono<Void> send(Address address, Message message) {
-        var addr = new NetworkAddress(address.host(), address.port());
+    public Mono<Void> send(String address, Message message) {
+        var addr = new NetworkAddress(Transport.parseHost(address), Transport.parsePort(address));
 
         return Mono.fromFuture(() -> {
             return messagingService.send(addr, SCALE_CUBE_CHANNEL_TYPE, fromMessage(message));
@@ -218,7 +217,7 @@ class ScaleCubeDirectMarshallerTransport implements Transport {
 
     /** {@inheritDoc} */
     @Override
-    public Mono<Message> requestResponse(Address address, Message request) {
+    public Mono<Message> requestResponse(String address, Message request) {
         return Mono.create(sink -> {
             Objects.requireNonNull(request, "request must be not null");
             Objects.requireNonNull(request.correlationId(), "correlationId must be not null");

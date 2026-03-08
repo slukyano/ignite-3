@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 import io.scalecube.cluster.Member;
 import io.scalecube.cluster.membership.MembershipEvent;
-import io.scalecube.net.Address;
+import io.scalecube.cluster.transport.api.Transport;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -50,8 +50,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 class ScaleCubeTopologyServiceTest {
     private final ScaleCubeTopologyService topologyService = new ScaleCubeTopologyService();
 
-    private final Member member1 = new Member(new UUID(0, 1).toString(), "first", Address.create("host", 1001), "default");
-    private final Member member2 = new Member(new UUID(0, 2).toString(), "second", Address.create("host", 1002), "default");
+    private final Member member1 = new Member(new UUID(0, 1).toString(), "first", "host:1001", "default");
+    private final Member member2 = new Member(new UUID(0, 2).toString(), "second", "host:1002", "default");
 
     @Test
     void addedEventAddsNodeToTopology() {
@@ -96,7 +96,9 @@ class ScaleCubeTopologyServiceTest {
     void getByAddressWorksWithConcurrentModifications(@InjectExecutorService ExecutorService executor) {
         testGetNodeWorksWithConcurrentModifications(
                 executor,
-                member -> topologyService.getByAddress(new NetworkAddress(member.address().host(), member.address().port()))
+                member -> topologyService.getByAddress(
+                        new NetworkAddress(Transport.parseHost(member.address()), Transport.parsePort(member.address()))
+                )
         );
     }
 
@@ -109,7 +111,7 @@ class ScaleCubeTopologyServiceTest {
             @InjectExecutorService ExecutorService executor,
             Function<Member, InternalClusterNode> getter
     ) {
-        Member member = new Member(randomUUID().toString(), "test", Address.create("host", 1001), "default");
+        Member member = new Member(randomUUID().toString(), "test", "host:1001", "default");
 
         AtomicBoolean proceed = new AtomicBoolean(true);
 
@@ -147,7 +149,7 @@ class ScaleCubeTopologyServiceTest {
         assertThatMatchesFirstMemberNewVersion(firstByConsistentId, member1NewVersion);
 
         InternalClusterNode firstByAddress = topologyService.getByAddress(
-                new NetworkAddress(member1.address().host(), member1.address().port())
+                new NetworkAddress(Transport.parseHost(member1.address()), Transport.parsePort(member1.address()))
         );
         assertThatMatchesFirstMemberNewVersion(firstByAddress, member1NewVersion);
     }

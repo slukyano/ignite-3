@@ -27,7 +27,6 @@ import io.scalecube.cluster.ClusterImpl;
 import io.scalecube.cluster.ClusterMessageHandler;
 import io.scalecube.cluster.membership.MembershipEvent;
 import io.scalecube.cluster.metadata.MetadataCodec;
-import io.scalecube.net.Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
@@ -291,13 +290,13 @@ public class ScaleCubeClusterService implements ClusterService {
     }
 
     private ClusterImpl createCluster() {
-        var transport = new ScaleCubeDirectMarshallerTransport(parseAddress(localNode.address()), messagingService, messageFactory);
+        var transport = new ScaleCubeDirectMarshallerTransport(formatAddress(localNode.address()), messagingService, messageFactory);
 
         ClusterConfig clusterConfig = clusterConfig(config.membership().value())
                 .memberId(localNode.id().toString())
                 .memberAlias(localNode.name())
                 .transport(opts -> opts.transportFactory(transportConfig -> transport))
-                .membership(opts -> opts.seedMembers(parseAddresses(nodeFinder.findNodes())))
+                .membership(opts -> opts.seedMembers(formatAddresses(nodeFinder.findNodes())))
                 .metadataCodec(METADATA_CODEC);
 
         return new ClusterImpl(clusterConfig)
@@ -351,14 +350,14 @@ public class ScaleCubeClusterService implements ClusterService {
         return new UserObjectSerializationContext(userObjectDescriptorRegistry, userObjectDescriptorFactory, userObjectMarshaller);
     }
 
-    private static List<Address> parseAddresses(Collection<NetworkAddress> addresses) {
+    private static List<String> formatAddresses(Collection<NetworkAddress> addresses) {
         return addresses.stream()
-                .map(ScaleCubeClusterService::parseAddress)
+                .map(ScaleCubeClusterService::formatAddress)
                 .collect(Collectors.toList());
     }
 
-    private static Address parseAddress(NetworkAddress address) {
-        return Address.create(address.host(), address.port());
+    private static String formatAddress(NetworkAddress address) {
+        return address.host() + ":" + address.port();
     }
 
     private void shutdownCluster() {
