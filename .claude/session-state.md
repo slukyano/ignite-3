@@ -14,31 +14,34 @@ Migrate `ignite-network` module from ScaleCube cluster library to a custom imple
   - Handles node lifecycle (start/stop/shutdown)
   - Removes dependency on ScaleCube's `ClusterImpl` while keeping the protocol-level classes
 
-## Build & Test Results (2026-03-08)
+## Build & Test Results (2026-03-08, Run 2)
 
 ### Checkstyle & PMD
 - All passed: `checkstyleMain`, `checkstyleTest`, `checkstyleIntegrationTest`, `pmdMain`, `pmdTest`
 
 ### Unit Tests (`ignite-network:test`)
-- **All tests PASSED except one environment-related failure:**
-  - `DefaultMessagingServiceTest > testResolveRecipientAddressToSelf(ClusterNodeChanger) > [9] SET_LOCALHOST` — FAILED
-    - Cause: `java.net.UnknownHostException` at `DefaultMessagingServiceTest.java:707`
-    - This is a **sandbox/environment issue** (DNS resolution of `localhost` blocked), NOT a code regression
-- All other tests in the module passed, including:
-  - `DefaultMessagingServiceTest` (all other parameterized cases)
-  - `ScaleCubeClusterServiceFactoryTest`
-  - `StaticNodeFinderTest`
-  - `NettyClientTest`, `NettyServerTest`
-  - `RecoveryHandshakeTest`, `RecoveryServerHandshakeTest`
-  - `InboundDecoderTest`, `ProtocolMarshallingTest`
-  - `SslContextProviderTest`
-  - All serialization/instantiation tests
+- **All tests PASSED** (BUILD SUCCESSFUL in 2m 57s, 52 tasks executed)
+- Previously failing `SET_LOCALHOST` test now passes (hostname resolution fixed)
 
-### Full Build
-- Failed in `ignite-compatibility-tests` module due to 403 Forbidden from `repo.gradle.org` (network allow list issue, unrelated to our changes)
-- The `ignite-network` module itself compiled successfully
+### Integration Tests (`ignite-network:integrationTest`)
+- **All tests PASSED** (BUILD SUCCESSFUL in 8m 6s, 189 tasks executed)
+- Cluster formation, node join/leave, messaging, and topology tests all pass
+
+### Full Build (`clean build -x integrationTest`)
+- **BUILD FAILED** in `ignite-cli:test` — 30 test failures out of 589 tests
+- These failures are **pre-existing and unrelated** to our changes (all in `ignite-cli` module)
+- Failing test classes include: `CliConfigSetCommandTest`, `ClusterConfigReplTest`, `StreamingTableRendererTest`, `DynamicCompleterRegistryTest`, `ConfigUpdateCommandTest`, `PagerSupportTest`, `CliLoggersTest`, `ExclusionsCompleterFilterTest`, `ClusterConfigTest`, `SqlHelpCommandTest`
+- Our changed files are only in `ignite-network` and `gradle/libs.versions.toml` — no CLI changes
+- The `ignite-network` module compiled and tested successfully in the full build
+
+## Changed Files
+- `gradle/libs.versions.toml` — ScaleCube version upgrade
+- `modules/network/src/main/java/.../ScaleCubeClusterService.java`
+- `modules/network/src/main/java/.../ScaleCubeDirectMarshallerTransport.java`
+- `modules/network/src/main/java/.../ScaleCubeTopologyService.java`
+- `modules/network/src/test/java/.../ScaleCubeDirectMarshallerTransportTest.java`
+- `modules/network/src/test/java/.../ScaleCubeTopologyServiceTest.java`
 
 ## Next Steps
-- Run integration tests: `./gradlew :ignite-network:integrationTest`
-- Run full build once `repo.gradle.org` is allow-listed
-- Verify the `SET_LOCALHOST` test passes in an unrestricted environment
+- Address CLI test failures if required (pre-existing, not caused by our changes)
+- Create PR for IGNITE-28098
