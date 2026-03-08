@@ -132,6 +132,14 @@ git push origin <branch-name>
 - **Prefer objects over static methods** - Use constructor injection everywhere possible
 - **Always include Jira ticket link in PRs** - Link to https://issues.apache.org/jira/browse/IGNITE-XXXXX
 
+## Build Log Convention
+
+Always save build output to `.build-logs/` instead of filtering with `tail`/`head`. This preserves the full output for diagnosis without re-running.
+- Log directory: `.build-logs/` (git-excluded via `.git/info/exclude`)
+- Naming: `.build-logs/<descriptive-name>.log` (e.g., `compile-network.log`, `checkstyle-network.log`)
+- Run builds with: `./gradlew <task> --no-daemon 2>&1 | tee .build-logs/<name>.log`
+- Then read the log file to check results
+
 ## Jira Workflow
 
 - All tickets **must** have the `ignite-3` label
